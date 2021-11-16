@@ -83,6 +83,7 @@ Module.register('MMM-WorldTides',{
 		}
 
 		var currentDate = this.tides[0].date;
+		var currentExtremeCol = 0
 
 		var table = document.createElement("table");
 		table.className = "small";
@@ -126,8 +127,14 @@ Module.register('MMM-WorldTides',{
 				dayCell.className = "day";
 				dayCell.innerHTML = currentTide.day;
 				row.appendChild(dayCell);
+				currentExtremeCol = 0
+
+				if (this.tides[i].type != this.tides[0].type){
+					var tideExtremeCell = document.createElement("td"); // create empty cell for when only 3 peaks in a day
+				}
 
 			}
+
 
 			var tideExtremeCell = document.createElement("td");
 			tideExtremeCell.style.paddingLeft = "10px";
