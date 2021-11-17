@@ -22,6 +22,9 @@ Module.register('MMM-WorldTides',{
 
 		lowtideSymbol: "fa fa-download",
 		hightideSymbol: "fa fa-upload",
+		boldHightide: true,
+		boldLowtide: false,
+		announceNextHigh: true,
 
 		initialLoadDelay: 0, // 0 seconds delay
 		retryDelay: 2500,
@@ -83,7 +86,6 @@ Module.register('MMM-WorldTides',{
 		}
 
 		var currentDate = this.tides[0].date;
-		var currentExtremeCol = 0
 
 		var table = document.createElement("table");
 		table.className = "small";
@@ -112,7 +114,8 @@ Module.register('MMM-WorldTides',{
 		dayCell.className = "day";
 		dayCell.innerHTML = this.tides[0].day;
 		row.appendChild(dayCell);
-
+		var nextHighIndex =-1;
+		var nextLowIndex = -1;
 
 		for (var i in this.tides) {
 
@@ -142,10 +145,32 @@ Module.register('MMM-WorldTides',{
 
 			if ( moment().unix() > currentTide.dt ) {
 				tideExtremeCell.className = "dimmed light small";
-			}
+			} else if (currentTide.type == "High"){
+				if (this.config.boldHightide){
+					tideExtremeCell.className = "bright";
+				}
+				if (nextHighIndex==-1){
+					nextHighIndex=i;
+				}
+			} else if (currentTide.type == "Low"){
+				if (this.config.boldLowtide){
+					tideExtremeCell.className = "bright";
+				}
+				if (nextLowIndex==-1){
+					nextLowIndex=i;
+				}
+			} 
+
 			row.appendChild(tideExtremeCell);
 		}
 		wrapper.appendChild(table);
+
+		if (this.config.announceNextHigh){
+			var announceDiv = document.createElement("div");
+			announceDiv.className = "normal"
+			announceDiv.innerHTML = "Next <span class=\"bright\">high tide</span> " + moment(this.tides[nextHighIndex].dt,"X").fromNow();
+			wrapper.appendChild(announceDiv);
+		}
 
 		return wrapper;
 	},
