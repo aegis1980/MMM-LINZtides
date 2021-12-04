@@ -1,24 +1,26 @@
 /* global Module */
 
 /* Magic Mirror
- * Module: MMM-WorldTides
+ * Module: MMM-LINZtides
  *
+ * 
+ * 
+ *(very) based on MMM-Worldtides:
+ * 
  * By Stefan Krause http://yawns.de
  * MIT Licensed.
- */
+*/
 
-Module.register('MMM-WorldTides',{
+Module.register('MMM-LINZtides',{
 
 	defaults: {
-		longitude: "",
-		latitude: "",
-		length: "",
-		appid: "",
+		numberOfDays: 4,
 		units: config.units,
 		animationSpeed: 1000,
-		updateInterval: 1000 * 3600, //update every hour
 		timeFormat: config.timeFormat,
 		lang: config.language,
+
+		tideStation: "Auckland",
 
 		lowtideSymbol: "fa fa-download",
 		hightideSymbol: "fa fa-upload",
@@ -26,10 +28,9 @@ Module.register('MMM-WorldTides',{
 		boldLowtide: false,
 		announceNextHigh: true,
 
-		initialLoadDelay: 0, // 0 seconds delay
-		retryDelay: 2500,
+		updateInterval: 14, //minutes
 
-		apiBase: "https://www.worldtides.info/api",
+		initialLoadDelay: 0, // 0 seconds delay
 	},
 
 	// Define required scripts.
@@ -60,18 +61,6 @@ Module.register('MMM-WorldTides',{
 
 	getDom: function() {
 		var wrapper = document.createElement("div");
-
-		if (this.config.appid === "") {
-			wrapper.innerHTML = "Please set the correct worldtides.info <i>appid</i> in the config for module: " + this.name + ".";
-			wrapper.className = "dimmed light small";
-			return wrapper;
-		}
-
-		if (this.config.longitude === "" || this.config.latitude === "") {
-			wrapper.innerHTML = "Please set the worldtides.info <i>longitude/latitude</i> in the config for module: " + this.name + ".";
-			wrapper.className = "dimmed light small";
-			return wrapper;
-		}
 
 		if (!this.loaded) {
 			wrapper.innerHTML = this.translate('LOADING');
@@ -167,8 +156,11 @@ Module.register('MMM-WorldTides',{
 
 		if (this.config.announceNextHigh){
 			var announceDiv = document.createElement("div");
-			announceDiv.className = "normal"
+			announceDiv.className = "normal";
+			const prevMinutesThreshold = moment.relativeTimeThreshold('m');
+			moment.relativeTimeThreshold('m', 15);
 			announceDiv.innerHTML = "Next <span class=\"bright\">high tide</span> " + moment(this.tides[nextHighIndex].dt,"X").fromNow();
+			moment.relativeTimeThreshold('m', prevMinutesThreshold);
 			wrapper.appendChild(announceDiv);
 		}
 
@@ -176,86 +168,78 @@ Module.register('MMM-WorldTides',{
 	},
 
 	/* updateTides
-	 * Requests new data from worldtides.info
-	 * Calls processTides on succesfull response.
+	 * Loads tide data from LINZ csv
+	 * Calls updateDom when done on successful response.
 	 */
-	updateTides: function() {
-		var url = this.config.apiBase + this.getParams();
-		var self = this;
-		var retry = true;
+	updateTides: function(callback) {
+		const inputFile='public/'+ this.config.tideStation + ' ' + new Date().getFullYear()+'.csv';
 
-		var tidesRequest = new XMLHttpRequest();
-		tidesRequest.open("GET", url, true);
-		tidesRequest.onreadystatechange = function() {
-			if (this.readyState === 4) {
-				if (this.status === 200) {
-					self.processTides(JSON.parse(this.response));
-				} else if (this.status === 400) {
-					self.config.appid = "";
-					self.updateDom(self.config.animationSpeed);
-
-					Log.error(self.name + ": Incorrect APPID.");
-					retry = false;
-				} else {
-					Log.error(self.name + ": Could not load tides.");
-				}
-
-				if (retry) {
-					self.scheduleUpdate((self.loaded) ? -1 : self.config.retryDelay);
-				}
+		const xobj = new XMLHttpRequest(),
+		path = this.file(inputFile)
+		xobj.overrideMimeType("text/csv");
+		xobj.open("GET", path, true);
+		xobj.onreadystatechange = function () {
+			if (xobj.readyState === 4 && xobj.status === 200) {
+				
+				callback(xobj.responseText);
 			}
 		};
-		tidesRequest.send();
+		xobj.send(null);
 	},
 
-	/* getParams
-	 * Generates an url with api parameters based on the config.
-	 *
-	 * return String - URL params.
-	 */
-	getParams: function() {
-		var params = "?extremes";
-		params += "&lat=" + this.config.latitude;
-		params += "&lon=" + this.config.longitude;
-		if(this.config.length !== "") {
-			params += "&length=" + this.config.length;
-		}
-		params += "&start=" + moment().startOf('date').unix();
-		params += "&key=" + this.config.appid;
-
-		return params;
-	},
-
-	/* processTides(data)
-	 * Uses the received data to set the various values.
-	 *
-	 * argument data object - tide information received form worldtides.info
-	 */
-	processTides: function(data) {
-
-		if (!data.extremes) {
-			// Did not receive usable new data.
-			// Maybe this needs a better check?
-			return;
-		}
-
-		this.tides = [];
-
-		for (var i in data.extremes) {
-			var t = data.extremes[i];
-			this.tides.push({
-
-				dt: t.dt,
-				date: moment(t.dt, "X").format("YYYY-MM-DD"),
-				day: moment(t.dt, "X").format("ddd"),
-				time: ((this.config.timeFormat === 24) ? moment(t.dt, "X").format("HH:mm") : moment(t.dt, "X").format("hh:mm a")),
-				type: t.type
-			});
-		}
+	process : function(data) {
+		
+		const rows = data.split(/\n/);//data.split(/\s+/);
+        let rowNum;
+        let cells;
+		this.tides = []
+		let dayCount = 0;
+        
+        for (rowNum = 3 ;rowNum < rows.length; ++rowNum) {
+			cells = rows[rowNum].split(",");
+			let date = new Date(cells[3],cells[2]-1,cells[0]); // extract date from first 3(actually 4) columns. January is 0 in JS world
+			if (!(date instanceof Date) || isNaN(date)) break;
+			if (moment(date).isBefore(moment(), 'day')){ //we are not interested in bygone days.
+				 continue;
+			} else {
+				if (dayCount>=this.config.numberOfDays) break; //we're done - have all days we need.
+				dayCount++;
+			}
+			let i = 4;
+			let high;
+			while (true) { 
+				//go thru each columns of csv
+				//data is in time-height pairs
+				const ht = parseFloat(cells[i+1]);
+				if (isNaN(ht)) break;
+		
+				const ts = cells[i].split(':');
+				date.setHours(parseInt(ts[0]));
+				date.setMinutes(parseInt(ts[1]));
+		
+				
+				if (i == 4 ){ //5th column
+					let nextht = parseFloat(cells[i+3]); // look forward for first one
+					high = (ht>nextht);
+				} else {
+					high = !high;
+				}
+		
+				i +=2;
+				this.tides.push({
+					dt: ~~(+date / 1000),
+					date: moment(date).format("YYYY-MM-DD"),
+					day: moment(date).format("ddd"),
+					time: moment(date).format("hh:mm a"),
+					type: high ? "High" : "Low"
+				});
+			}
+        }
 
 		this.loaded = true;
 		this.updateDom(this.config.animationSpeed);
 	},
+
 
 	/* scheduleUpdate()
 	 * Schedule next update.
@@ -263,15 +247,18 @@ Module.register('MMM-WorldTides',{
 	 * argument delay number - Milliseconds before next update. If empty, this.config.updateInterval is used.
 	 */
 	scheduleUpdate: function(delay) {
-		var nextLoad = this.config.updateInterval;
+		let nextupdate = this.config.updateInterval * 3600 * 1000;
+
 		if (typeof delay !== "undefined" && delay >= 0) {
-			nextLoad = delay;
+			nextupdate = delay;
 		}
 
 		var self = this;
 		setTimeout(function() {
-			self.updateTides();
-		}, nextLoad);
+			self.updateTides((response) => {
+				self.process(response);
+			});
+		}, nextupdate);
 	},
 
 });

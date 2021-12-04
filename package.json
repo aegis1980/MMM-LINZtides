@@ -1,10 +1,10 @@
 {
-  "name": "MMM-WorldTides",
-  "version": "1.0.0",
-  "description": "MagicMirror2 Module to present low and high water time predictions for given tide station",
+  "name": "MMM-LINZtides",
+  "version": "0.1",
+  "description": "MagicMirror2 Module to present low and high water time predictions for New Zealand LINZ locations",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yawnsde/MMM-WorldTides"
+    "url": "git+https://github.com/aegis1980/MMM-LINZtides"
   },
   "keywords": [
     "magic mirror",
@@ -12,15 +12,17 @@
     "tide",
     "high water",
     "low water",
-    "flood"
+    "linz",
+    "new zealand"
   ],
-  "author": "Stefan Krause",
-  "contributors": "https://github.com/yawnsde/MMM-WorldTides/graphs/contributors",
+  "author": "Jon Robinson",
+  "contributors": "https://github.com/aegis1980/MMM-LINZtides/graphs/contributors",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yawnsde/MMM-WorldTides/issues"
+    "url": "https://github.com/aegis1980/MMM-LINZtides/issues"
   },
-  "homepage": "https://github.com/yawnsde/MMM-WorldTides#readme",
+  "homepage": "https://github.com/aegis1980/MMM-LINZtides#readme",
   "dependencies": {
-    }
+    "fast-csv": "^4.3.6"
+  }
 }
