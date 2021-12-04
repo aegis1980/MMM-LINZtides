@@ -1,10 +1,10 @@
 # MMM-LINZtides
 
-This a New Zealand -cetric extension for the [MagicMirror](https://github.com/MichMich/MagicMirror).
+This a very New Zealand-centric tides extension for the [MagicMirror](https://github.com/MichMich/MagicMirror).
 
-Its a modilfied version of [MMM-WorldTides](https://github.com/yawnsde/MMM-WorldTides) except this version pulls in data from local csv annual tide tables published by LINZ, whereas the original entension pulls in data from the worldtides API based on a (lat,lng). 
+Its a modilfied version of [MMM-WorldTides](https://github.com/yawnsde/MMM-WorldTides). MMM-LINZTides pulls in data from local csv annual tide tables published by LINZ, whereas MMM-WorldTides pulls in data from the worldtides API based on a (lat,lng). 
 
-Main reason for this was that tide times did not seem to be correct (~ 30min off) and seemed wasteful to keep pinging worldtimes.
+Main reason for this was that tide times did not seem to be correct from Worldtides API (~ 30min off) and seemed wasteful to keep pinging worldtimes.
 
 ## Installation
 Open a terminal session, navigate to your MagicMirror's `modules` folder and execute `git clone https://github.com/aegis1980/MMM-LINZtides.git`, a new folder called MMM-LINZtides will be created.
@@ -33,6 +33,10 @@ The following properties can be configured:
 
 | **Option** | **Values** | **Description** |
 | --- | --- | --- |
-| `length` | Default: `2` <br>(Practical) maximum: `7` | The amount of days to be displayed. |
+| `numberOfDays` | Default: `4` <br>(Practical) maximum: `7` | The amount of days to be displayed. |
 | `hightideSymbol` | Default: `'fa fa-upload'` | A custom css value to change the symbol for flood. You can use symbols like `'wi weathericon wi-flood'` [WeatherIcons](https://erikflowers.github.io/weather-icons/), `'fa fa-level-up'` [fontawesome](http://fontawesome.io/icons/) |
 | `lowtideSymbol` | Default: `'fa fa-download'` | A custom css value to change the symbol for ebb. |
+| `boldHightide` | Default: `true` | High tide times will be in bold |
+| `boldLowtide` | Default: `false` | Low tide times will be in bold |
+| `announceNextHigh` | Default: `true` | Included humanised time period to next high tide, e.g. `Next high tide in 4 hours` |
+
