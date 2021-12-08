@@ -247,7 +247,7 @@ Module.register('MMM-LINZtides',{
 	 * argument delay number - Milliseconds before next update. If empty, this.config.updateInterval is used.
 	 */
 	scheduleUpdate: function(delay) {
-		let nextupdate = this.config.updateInterval * 3600 * 1000;
+		let nextupdate = this.config.updateInterval * 60 * 1000;
 
 		if (typeof delay !== "undefined" && delay >= 0) {
 			nextupdate = delay;
