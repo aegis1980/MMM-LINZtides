@@ -28,8 +28,7 @@ Module.register('MMM-LINZtides',{
 		boldLowtide: false,
 		announceNextHigh: true,
 
-		updateInterval: 14, //minutes
-
+		updateInterval: 23, //hours
 		initialLoadDelay: 0, // 0 seconds delay
 	},
 
@@ -179,12 +178,13 @@ Module.register('MMM-LINZtides',{
 		xobj.overrideMimeType("text/csv");
 		xobj.open("GET", path, true);
 		xobj.onreadystatechange = function () {
-			if (xobj.readyState === 4 && xobj.status === 200) {
-				
+			if (xobj.readyState === 4 && xobj.status === 200) {	
 				callback(xobj.responseText);
 			}
+			
 		};
 		xobj.send(null);
+		this.scheduleUpdate(-1);
 	},
 
 	process : function(data) {
@@ -247,12 +247,11 @@ Module.register('MMM-LINZtides',{
 	 * argument delay number - Milliseconds before next update. If empty, this.config.updateInterval is used.
 	 */
 	scheduleUpdate: function(delay) {
-		let nextupdate = this.config.updateInterval * 60 * 1000;
+		let nextupdate = this.config.updateInterval * 60 * 60 * 1000;
 
 		if (typeof delay !== "undefined" && delay >= 0) {
 			nextupdate = delay;
 		}
-
 		var self = this;
 		setTimeout(function() {
 			self.updateTides((response) => {
